@@ -24,16 +24,6 @@ import numpy as np
 from data_loader import DataSet, load_data
 from model import *
 
-def flatten(data):
-    '''
-    'data': (wavs, feats, dim), 'label': (wavs)
-    '''
-    label = []
-    for i, wav in enumerate(data['data']):
-        label += [data['label'][i]] * len(wav)
-    data['label'] = label
-    data['data'] = np.vstack(data['data'])
-
 def main():
     parser = argparse.ArgumentParser(description='Chainer example: MNIST')
     parser.add_argument('--batchsize', '-b', type=int, default=200,
@@ -77,14 +67,6 @@ def main():
     optimizer.setup(model)
     optimizer.add_hook(chainer.optimizer.WeightDecay(5e-4))
 
-    # Load the MNIST dataset
-    # train, test = chainer.datasets.get_mnist()  # tuple_dataset.TupleDataset(images, labels)
-    # feat_train = load_cqcc('train')
-    # flatten(feat_train)
-    # train = tuple_dataset.TupleDataset(feat_train['data'], feat_train['label'])
-    # feat_test = load_cqcc('dev')
-    # flatten(feat_test)
-    # test = tuple_dataset.TupleDataset(feat_test['data'], feat_test['label'])
 
     # extract all feature
     train_data, train_label, _ = load_data()
@@ -104,9 +86,6 @@ def main():
     train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
     test_iter = chainer.iterators.SerialIterator(test, args.batchsize, repeat=False, shuffle=False)
 
-    # train_iter = chainer.iterators.MultiprocessIterator(train, args.batchsize, n_processes=1)
-    # test_iter = chainer.iterators.MultiprocessIterator(test, args.batchsize, n_processes=1, repeat=False, shuffle=False)
-
     sum_accuracy = 0
     sum_loss = 0
     train_count = 0
@@ -123,15 +102,6 @@ def main():
             print('Reducing learning rate to: ', optimizer.lr)
 
         x, t = concat_examples(batch)
-        # batch = np.array(batch)
-        # x = np.vstack(batch[:, 0])  # (frames, window*dim)
-        # t = np.hstack(batch[:, 1])
-
-        # random shuffle
-        # indix = [i for i in range(len(t))]
-        # np.random.shuffle(indix)
-        # x = x[indix]
-        # t = t[indix]
 
         if args.gpu >= 0:
             x = cuda.to_gpu(x, args.gpu)
@@ -141,7 +111,7 @@ def main():
         sum_loss += float(model.loss.data)
         sum_accuracy += float(model.accuracy.data) * len(t)
         train_count += len(t)
-        # print('loss ', sum_loss / train_count, ' acc', sum_accuracy / train_count)
+        
         if train_iter.is_new_epoch:
             print('epoch: ', train_iter.epoch)
             print('train mean loss: %.5f, accuracy: %.2f%%' % (
