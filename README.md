@@ -9,5 +9,8 @@
 * pywt 0.5.2
 
 ## Notice
-You can add models in model.py, then use it in dnn.py.
+1. Change `ROOT` in `data_loader.py` to your local data path.
+2. Add models in `model.py`
+3. Change model initialization in `dnn.py`, fine-tune hyperparameters, and run `python dnn.py <parameters>`
+
   
