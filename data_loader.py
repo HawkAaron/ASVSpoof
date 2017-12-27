@@ -97,7 +97,14 @@ class DataSet():
         '''
         **NOT IMPLEMENT FOR SLICE**
         '''
-        return (self.data[idx], self.label[idx])
+        if type(idx) is not slice:
+            return (self.data[idx], self.label[idx])
+        
+        # slice reading
+        items = []
+        for i in range(idx.start, idx.stop):
+            items.append((self.data[i], self.label[i]))
+        return items
 
 class DataSetOnLine():
     '''
@@ -138,7 +145,7 @@ class DataSetOnLine():
             `feature: (wav, feats, dim*11)
         **WAV CORRUPT EXCEPTION NOT HUNDLE**
         '''
-        if self.mode == 'train':
+        if type(idx) is not slice:
             if self.buf and self.buffer[idx] is not None:
                 return self.buffer[idx]
 
@@ -151,16 +158,17 @@ class DataSetOnLine():
             if self.buf:
                 self.buffer[idx] = item
             return item
-        if self.mode == 'dev':
-            items = []
-            for i in range(idx.start, idx.stop):
-                wav_path = os.path.join(WAV[self.mode], self.flist[i])
-                feat = extract(wav_path, self.feat_type);
 
-                feat = feat_padding(feat)
+        # slice reading
+        items = []
+        for i in range(idx.start, idx.stop):
+            wav_path = os.path.join(WAV[self.mode], self.flist[i])
+            feat = extract(wav_path, self.feat_type);
 
-                items.append((feat, [self.label[i]] * feat.shape[0], self.flist[i]))
-            return items
+            feat = feat_padding(feat)
+
+            items.append((feat, [self.label[i]] * feat.shape[0], self.flist[i]))
+        return items
 
 if __name__ == '__main__':
     train = DataSetOnLine('train', 'fft', False)
