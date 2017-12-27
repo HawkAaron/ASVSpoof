@@ -119,7 +119,7 @@ def main():
         sum_accuracy += float(model.accuracy.data) * len(t)
         train_count += len(t)
 
-        print('loss %.5f, acc %.2f%%' % (sum_loss/train_count, 100*sum_accuracy/train_count))
+        print('train loss %.5f, acc %.2f%%' % (sum_loss/train_count, 100*sum_accuracy/train_count))
 
         if train_iter.is_new_epoch:
             print('epoch: ', train_iter.epoch)
@@ -145,6 +145,8 @@ def main():
                 sum_loss += float(loss.data)
                 sum_accuracy += float(model.accuracy.data) * len(t)
                 dev_count += len(t)
+
+                print('dev loss %.5f, acc %.2f%%' % (sum_loss/dev_count, 100*sum_accuracy/dev_count))
 
             dev_iter.reset()
             model.predictor.train = True
