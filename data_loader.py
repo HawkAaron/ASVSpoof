@@ -1,8 +1,11 @@
 import os, pickle
 import numpy as np
 from extract_feature import extract
+import configparser
 
-ROOT = '/leuvenfs/workspace/course/asr/project2/'
+settings = configparser.ConfigParser()
+settings.read('config')
+ROOT = settings.get('data', 'root')
 TRAIN = ROOT + 'ASVspoof2017_train/'
 DEV = ROOT + 'ASVspoof2017_dev/'
 EVAL = ROOT + 'ASVspoof2017_eval/'
@@ -148,7 +151,7 @@ class DataSetOnLine():
             if self.buf:
                 self.buffer[idx] = item
             return item
-        else:
+        if self.mode == 'dev':
             items = []
             for i in range(idx.start, idx.stop):
                 wav_path = os.path.join(WAV[self.mode], self.flist[i])
