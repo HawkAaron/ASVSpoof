@@ -30,6 +30,28 @@ def load_data(mode='train', feat_type='db4', update=False, fresh=False):
         pickle.dump(data, f)
     return data
 
+def feat_window(feat):
+    window = 6  # actual size = 2 * window - 1
+    feat = np.pad(feat, [[0, 0], [window - 1, window - 1]], mode='edge')
+    tmp_feat = []
+    for i in range(window - 1, feat.shape[1] - window, 2*window-1):
+        fram_win = feat[:, i-window+1: i+window].reshape(-1) # store feat_dim * 11 map as vector
+        tmp_feat.append(fram_win)
+    return np.array(tmp_feat, dtype=np.float32)
+
+def feat_padding(feat, width=400):
+    dim = feat.shape[0]
+
+    padding = width - feat.shape[1] % width
+    if padding < 200:
+        feat = np.pad(feat, [[0, 0], [0, padding]], mode='edge')
+    if feat.shape[1] % width:
+        feat = feat[:, :-(feat.shape[1]%width)]
+    tmp_feat = feat.T.reshape(-1, width, dim)
+
+    return tmp_feat
+
+
 def load_all_feature(mode='train', feat_type='db4'):
     flist = []  # wav file list
     label = []  # wav label list
@@ -50,16 +72,14 @@ def load_all_feature(mode='train', feat_type='db4'):
             print('CORRUPTED WAV: ', wav_path)
             continue
 
-        window = 6  # actual size = 2 * window - 1
-        feat = np.pad(feat, [[0, 0], [window - 1, window - 1]], mode='edge')
-        tmp_feat = []
-        for i in range(window - 1, feat.shape[1] - window, 2*window-1):
-            fram_win = feat[:, i-window+1: i+window].reshape(-1) # store feat_dim * 11 map as vector
-            tmp_feat.append(fram_win)
-        tmp_feat = np.array(tmp_feat, dtype=np.float32) # (frames, dim*11)
-        final_feat.append(tmp_feat)
+        if feat_type == 'fft':
+            feat = feat_padding(feat)
+        else:
+            feat = feat_window(feat)
+
+        final_feat.append(feat)
         final_flist.append(flist[idx])
-        final_label.append([label[idx]] * len(tmp_feat)) # label expand (wavs, frames)
+        final_label.append([label[idx]] * len(feat)) # label expand (wavs, frames)
     return final_feat, final_label, final_flist
 
 class DataSet():
@@ -115,25 +135,33 @@ class DataSetOnLine():
             `feature: (wav, feats, dim*11)
         **WAV CORRUPT EXCEPTION NOT HUNDLE**
         '''
-        if self.buf and self.buffer[idx] is not None:
-            return self.buffer[idx]
+        if self.mode == 'train':
+            if self.buf and self.buffer[idx] is not None:
+                return self.buffer[idx]
 
-        wav_path = os.path.join(WAV[self.mode], self.flist[idx])
-        feat = extract(wav_path, self.feat_type)   # wav corrupt not hundle
+            wav_path = os.path.join(WAV[self.mode], self.flist[idx])
+            feat = extract(wav_path, self.feat_type)   # wav corrupt not hundle
 
-        window = 6  # actual size = 2 * window - 1
-        feat = np.pad(feat, [[0, 0], [window - 1, window - 1]], mode='edge')
-        final_feat = []
-        for i in range(window - 1, feat.shape[1] - window, window):
-            tmp = feat[:, i-window+1: i+window].reshape(-1) # store feat_dim/window * 11 map as vector
-            final_feat.append(tmp)
-        final_feat = np.array(final_feat, dtype=np.float32)
+            feat = feat_padding(feat)
 
-        item = (final_feat, self.label[idx], self.flist[idx])
-        if self.buf:
-            self.buffer[idx] = item
-        return item
+            item = (feat, [self.label[idx]] * feat.shape[0], self.flist[idx])
+            if self.buf:
+                self.buffer[idx] = item
+            return item
+        else:
+            items = []
+            for i in range(idx.start, idx.stop):
+                wav_path = os.path.join(WAV[self.mode], self.flist[i])
+                feat = extract(wav_path, self.feat_type);
+
+                feat = feat_padding(feat)
+
+                items.append((feat, [self.label[i]] * feat.shape[0], self.flist[i]))
+            return items
 
 if __name__ == '__main__':
-    train = load_data('train')
-    test = load_data('dev')
+    train = DataSetOnLine('train', 'fft', False)
+    print(train[3])
+    # load_all_feature('train', 'fft')
+    # train = load_data('train')
+    # test = load_data('dev')

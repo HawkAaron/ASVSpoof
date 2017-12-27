@@ -27,17 +27,17 @@ class DNN(chainer.Chain):
         h = self.l1(x)
         # h = self.bn1(h)
         h = F.relu(h)
-        # h = F.dropout(h)
+        h = F.dropout(h)
 
         h = self.l2(x)
         # h = self.bn2(h)
         h = F.relu(h)
-        # h = F.dropout(h)
+        h = F.dropout(h)
 
         h = self.l3(x)
         # h = self.bn3(h)
         h = F.relu(h)
-        # h = F.dropout(h)
+        h = F.dropout(h)
         return self.l4(h)
 
 '''
@@ -72,11 +72,11 @@ class MLP_BLOCK(chainer.Chain):
 # Network definition
 class MLP(chainer.Chain):
 
-    def __init__(self, n_units, n_out):
+    def __init__(self, n_units=512, n_out=2):
         super(MLP, self).__init__()
         with self.init_scope():
-            self.conv1 = CONV_BLOCK(16, 3)
-            self.conv2 = CONV_BLOCK(16, 3)
+            self.conv1 = CONV_BLOCK(4, 3)
+            self.conv2 = CONV_BLOCK(4, 3)
             self.b1 = MLP_BLOCK(n_units)
             self.b2 = MLP_BLOCK(n_units)
             self.b3 = MLP_BLOCK(n_units)
@@ -85,19 +85,18 @@ class MLP(chainer.Chain):
             self.lout = L.Linear(None, n_out)  # n_units -> n_out
 
     def __call__(self, x):
-        x = x.reshape(x.shape[0], 1, -1, 11)
-
+        x = x.reshape(x.shape[0], 1, x.shape[1], -1)
         h = self.conv1(x)
         h = F.dropout(h)
         h = self.conv2(x)
         h = F.max_pooling_2d(h, ksize=2, stride=2)
 
         h = F.dropout(h)
-        h = self.b1(h)
-        h = self.b2(h)
-        h = self.b3(h)
-        h = self.b4(h)
-        h = self.b5(h)
+        # h = self.b1(h)
+        # h = self.b2(h)
+        # h = self.b3(h)
+        # h = self.b4(h)
+        # h = self.b5(h)
         return self.lout(h)
 
 '''
@@ -164,22 +163,21 @@ class VGG(chainer.Chain):
             self.block1_2 = Block(64, 3)
             self.block2_1 = Block(128, 3)
             self.block2_2 = Block(128, 3)
-            # self.block3_1 = Block(256, 3)
-            # self.block3_2 = Block(256, 3)
-            # self.block3_3 = Block(256, 3)
+            self.block3_1 = Block(256, 3)
+            self.block3_2 = Block(256, 3)
+            self.block3_3 = Block(256, 3)
             # self.block4_1 = Block(512, 3)
             # self.block4_2 = Block(512, 3)
             # self.block4_3 = Block(512, 3)
             # self.block5_1 = Block(512, 3)
             # self.block5_2 = Block(512, 3)
             # self.block5_3 = Block(512, 3)
-            self.fc1 = L.Linear(None, 128, nobias=True)
-            self.bn_fc1 = L.BatchNormalization(128)
+            self.fc1 = L.Linear(None, 256, nobias=True)
+            self.bn_fc1 = L.BatchNormalization(256)
             self.fc2 = L.Linear(None, class_labels, nobias=True)
 
     def __call__(self, x):
-        x = x.reshape(x.shape[0], 1, -1, 11)
-        
+       
         # 64 channel blocks:
         h = self.block1_1(x)
         h = F.dropout(h, ratio=0.3)
@@ -192,13 +190,13 @@ class VGG(chainer.Chain):
         h = self.block2_2(h)
         h = F.max_pooling_2d(h, ksize=2, stride=2)
 
-        # # 256 channel blocks:
-        # h = self.block3_1(h)
-        # h = F.dropout(h, ratio=0.4)
-        # h = self.block3_2(h)
-        # h = F.dropout(h, ratio=0.4)
-        # h = self.block3_3(h)
-        # h = F.max_pooling_2d(h, ksize=2, stride=2)
+        # 256 channel blocks:
+        h = self.block3_1(h)
+        h = F.dropout(h, ratio=0.4)
+        h = self.block3_2(h)
+        h = F.dropout(h, ratio=0.4)
+        h = self.block3_3(h)
+        h = F.max_pooling_2d(h, ksize=2, stride=2)
 
         # # 512 channel blocks:
         # h = self.block4_1(h)
