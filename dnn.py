@@ -86,8 +86,8 @@ def main():
     train = DataSetOnLine(mode='train', feat_type='fft', buf=False)
     dev = DataSetOnLine(mode='dev', feat_type='fft', buf=False)
 
-    train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
-    dev_iter = chainer.iterators.SerialIterator(dev, args.batchsize, repeat=False, shuffle=False)
+    train_iter = chainer.iterators.MultiprocessIterator(train, args.batchsize, n_prefetch=2, shared_mem=100*1024*1024)
+    dev_iter = chainer.iterators.MultiprocessIterator(dev, args.batchsize, n_prefetch=2, shared_mem=100*1024*1024, repeat=False, shuffle=False)
 
     sum_accuracy = 0
     sum_loss = 0
