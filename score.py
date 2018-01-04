@@ -9,7 +9,7 @@ parser.add_argument('--model', '-m', default='model_final', help='model to predi
 args = parser.parse_args()
 
 model = None
-chainer.serializers.load_npz(args.model, model)
+chainer.serializers.load_npz(os.path.join(args.dir, args.model), model)
 model = model.predictor
 
 if args.gpu >= 0:
