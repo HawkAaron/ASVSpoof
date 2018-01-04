@@ -1,5 +1,6 @@
 import argparse, os
 
+import models
 from models import *
 from models.common import *
 
@@ -63,6 +64,7 @@ def main():
     parser.add_argument('--noplot', dest='plot', action='store_false', help='Disable PlotReport extension')
 
     parser.add_argument('--net', '-n', default='dnn', help='Nnet type for choosing iterators')
+    parser.add_argument('--model', '-m', default='DNN', help='Nnet model structure')
     args = parser.parse_args()
 
     try:
@@ -77,7 +79,12 @@ def main():
     print('')
 
     # Set up a neural network to train
-    model = L.Classifier(DNN())
+    try:
+        model = L.Classifier(getattr(models, args.model)())
+    except:
+        print('{} not found!'.format(args.model))
+        return 
+    
     if args.gpu >= 0:
         # Make a speciied GPU current
         chainer.cuda.get_device_from_id(args.gpu).use()
@@ -108,7 +115,7 @@ def main():
     trainer.extend(extensions.dump_graph('main/loss'))
 
     # Take a snapshot at each epoch
-    trainer.extend(extensions.snapshot(), trigger=(args.epoch, 'epoch'))
+    # trainer.extend(extensions.snapshot(), trigger=(args.epoch, 'epoch'))
 
     # Write a log of evaluation statistics for each epoch
     trainer.extend(extensions.LogReport())
@@ -131,6 +138,9 @@ def main():
 
     # Run the training
     trainer.run()
+    
+    # Serialize the final model
+    chainer.serializers.save_npz(os.path.join(args.out, 'model_final'), model)
 
 if __name__ == '__main__':
     main()
