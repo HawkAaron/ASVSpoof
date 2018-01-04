@@ -1,4 +1,4 @@
-from common import *
+from .common import *
 
 class CONV_BLOCK(chainer.Chain):
     def __init__(self, out_channels=64, ksize=11, pad=1):

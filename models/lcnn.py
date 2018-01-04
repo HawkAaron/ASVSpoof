@@ -1,9 +1,4 @@
-from __future__ import print_function
-
-import chainer
-from chainer import cuda
-import chainer.functions as F
-import chainer.links as L
+from .common import *
 
 """Light CNN with res-block"""
 

@@ -1,19 +1,10 @@
-from __future__ import print_function
-
 import argparse, os
 
-import chainer
-from chainer import cuda
-from chainer.dataset import concat_examples
-from chainer.datasets import tuple_dataset
-import chainer.links as L
-import chainer.functions as F
-from chainer import serializers
-from chainer import training
-from chainer.training import extensions
-import numpy as np
-from data_loader import DataSet, load_data, DataSetOnLine
 from models import *
+from models.common import *
+
+from data_loader import DataSet, load_data, DataSetOnLine
+
 
 def convert_batch(batch, device=None):
     batch = np.array(batch)

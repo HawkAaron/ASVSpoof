@@ -1,4 +1,4 @@
-from common import *
+from .common import *
 
 class DNN(chainer.Chain):
     def __init__(self, h_dim=2048):
