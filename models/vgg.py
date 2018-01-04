@@ -1,107 +1,5 @@
-from __future__ import print_function
+from common import *
 
-import chainer
-from chainer import cuda
-import chainer.functions as F
-import chainer.links as L
-
-'''
-DNN
-'''
-class DNN(chainer.Chain):
-    def __init__(self, h_dim=2048):
-        super(DNN, self).__init__()
-        with self.init_scope():
-            self.l1 = L.Linear(None, h_dim)
-            self.bn1 = L.BatchNormalization(h_dim)
-            
-            self.l2 = L.Linear(None, h_dim)
-            self.bn2 = L.BatchNormalization(h_dim)
-
-            self.l3 = L.Linear(None, h_dim)
-            self.bn3 = L.BatchNormalization(h_dim)
-
-            self.l4 = L.Linear(None, 2)
-
-    def __call__(self, x):
-        h = self.l1(x)
-        # h = self.bn1(h)
-        h = F.relu(h)
-        h = F.dropout(h)
-
-        h = self.l2(x)
-        # h = self.bn2(h)
-        h = F.relu(h)
-        h = F.dropout(h)
-
-        h = self.l3(x)
-        # h = self.bn3(h)
-        h = F.relu(h)
-        h = F.dropout(h)
-        return self.l4(h)
-
-'''
-CONV + DNN
-'''
-class CONV_BLOCK(chainer.Chain):
-    def __init__(self, out_channels=64, ksize=11, pad=1):
-        super(CONV_BLOCK, self).__init__()
-        with self.init_scope():
-            self.conv = L.Convolution2D(None, out_channels, ksize, pad=pad,
-                                        nobias=True)
-            self.bn = L.BatchNormalization(out_channels)
-
-    def __call__(self, x):
-        h = self.conv(x)
-        h = self.bn(h)
-        return F.relu(h)
-
-class MLP_BLOCK(chainer.Chain):
-    def __init__(self, h_dim):
-        super(MLP_BLOCK, self).__init__()
-        with self.init_scope():
-            self.l1 = L.Linear(None, h_dim)
-            self.bn = L.BatchNormalization(h_dim)
-    
-    def __call__(self, x):
-        h = self.l1(x)
-        h = self.bn(h)
-        h = F.relu(h)
-        return F.dropout(h)
-
-# Network definition
-class MLP(chainer.Chain):
-
-    def __init__(self, n_units=512, n_out=2):
-        super(MLP, self).__init__()
-        with self.init_scope():
-            self.conv1 = CONV_BLOCK(4, 3)
-            self.conv2 = CONV_BLOCK(4, 3)
-            self.b1 = MLP_BLOCK(n_units)
-            self.b2 = MLP_BLOCK(n_units)
-            self.b3 = MLP_BLOCK(n_units)
-            self.b4 = MLP_BLOCK(n_units)
-            self.b5 = MLP_BLOCK(n_units)
-            self.lout = L.Linear(None, n_out)  # n_units -> n_out
-
-    def __call__(self, x):
-        x = x.reshape(x.shape[0], 1, x.shape[1], -1)
-        h = self.conv1(x)
-        h = F.dropout(h)
-        h = self.conv2(x)
-        h = F.max_pooling_2d(h, ksize=2, stride=2)
-
-        h = F.dropout(h)
-        # h = self.b1(h)
-        # h = self.b2(h)
-        # h = self.b3(h)
-        # h = self.b4(h)
-        # h = self.b5(h)
-        return self.lout(h)
-
-'''
-VGG
-'''
 class Block(chainer.Chain):
 
     """A convolution, batch norm, ReLU block.
@@ -141,16 +39,6 @@ class VGG(chainer.Chain):
     which is based on the network architecture from the paper:
     https://arxiv.org/pdf/1409.1556v6.pdf
 
-    This model is intended to be used with either RGB or greyscale input
-    images that are of size 32x32 pixels, such as those in the CIFAR10
-    and CIFAR100 datasets.
-
-    On CIFAR10, it achieves approximately 89% accuracy on the test set with
-    no data augmentation.
-
-    On CIFAR100, it achieves approximately 63% accuracy on the test set with
-    no data augmentation.
-
     Args:
         class_labels (int): The number of class labels.
 
@@ -177,7 +65,8 @@ class VGG(chainer.Chain):
             self.fc2 = L.Linear(None, class_labels, nobias=True)
 
     def __call__(self, x):
-       
+        x = x.reshape(x.shape[0], 1, x.shape[1], -1)
+
         # 64 channel blocks:
         h = self.block1_1(x)
         h = F.dropout(h, ratio=0.3)

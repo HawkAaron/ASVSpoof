@@ -13,8 +13,7 @@ from chainer import training
 from chainer.training import extensions
 import numpy as np
 from data_loader import DataSet, load_data, DataSetOnLine
-from model import *
-from lcnn import LightCNN_29Layers
+from models import *
 
 def convert_batch(batch, device=None):
     batch = np.array(batch)

@@ -51,9 +51,12 @@ class resblock(chainer.Chain):
         return out
 
 
-class LightCNN_29Layers(chainer.Chain):
+class LightCNN(chainer.Chain):
+    '''
+    light CNN 29 layers
+    '''
     def __init__(self, num_classes=2):
-        super(LightCNN_29Layers, self).__init__()
+        super(LightCNN, self).__init__()
         with self.init_scope():
 
             self.conv1 = mfm(1, 48, 5, 1, 2)
