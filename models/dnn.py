@@ -13,7 +13,13 @@ class DNN(chainer.Chain):
             self.l3 = L.Linear(None, h_dim)
             self.bn3 = L.BatchNormalization(h_dim)
 
-            self.l4 = L.Linear(None, 2)
+            self.l4 = L.Linear(None, h_dim)
+            self.bn4 = L.BatchNormalization(h_dim)
+
+            self.l5 = L.Linear(None, h_dim)
+            self.bn5 = L.BatchNormalization(h_dim)
+
+            self.l6 = L.Linear(None, 2)
 
     def __call__(self, x):
         h = self.l1(x)
@@ -30,4 +36,14 @@ class DNN(chainer.Chain):
         # h = self.bn3(h)
         h = F.relu(h)
         h = F.dropout(h)
-        return self.l4(h)
+
+        h = self.l4(x)
+        # h = self.bn4(h)
+        h = F.relu(h)
+        h = F.dropout(h)
+
+        h = self.l5(x)
+        # h = self.bn5(h)
+        h = F.relu(h)
+        h = F.dropout(h)
+        return self.l6(h)

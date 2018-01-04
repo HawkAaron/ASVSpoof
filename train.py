@@ -32,14 +32,14 @@ def dnn_iter(batchsize):
     # extract all feature
     train_data, train_label, _ = load_data()
     train_data = np.vstack(train_data)
-    mean = np.mean(train_data, axis=0)
-    std = np.std(train_data, axis=0)
-    train_data = (train_data - mean) / std
+    # mean = np.mean(train_data, axis=0)
+    # std = np.std(train_data, axis=0)
+    # train_data = (train_data - mean) / std
     dev_data, dev_label, _ = load_data(mode='dev')
     dev_data = np.vstack(dev_data)
-    mean = np.mean(dev_data, axis=0)
-    std = np.std(dev_data, axis=0)
-    dev_data = (dev_data - mean) / std
+    # mean = np.mean(dev_data, axis=0)
+    # std = np.std(dev_data, axis=0)
+    # dev_data = (dev_data - mean) / std
 
     train = DataSet(train_data, np.hstack(train_label))
     print(len(train))
@@ -53,7 +53,7 @@ def dnn_iter(batchsize):
     return train_iter, dev_iter
 
 def main():
-    parser = argparse.ArgumentParser(description='Chainer example: MNIST')
+    parser = argparse.ArgumentParser(description='ASVSpoof')
     parser.add_argument('--batchsize', '-b', type=int, default=20, help='Number of images in each mini-batch')
     parser.add_argument('--epoch', '-e', type=int, default=100, help='Number of sweeps over the dataset to train')
     parser.add_argument('--lr', '-l', type=float, default=1e-5, help='learning rate')
@@ -105,7 +105,7 @@ def main():
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
 
     # Evaluate the model with the test dataset for each epoch
-    trainer.extend(extensions.Evaluator(dev_iter, model, device=args.gpu))
+    trainer.extend(extensions.Evaluator(dev_iter, model, converter=convert_batch, device=args.gpu))
 
     # Reduce the learning rate by half every 25 epochs.
     trainer.extend(extensions.ExponentialShift('lr', 0.5), trigger=(10, 'epoch'))
