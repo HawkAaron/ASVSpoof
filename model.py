@@ -9,7 +9,7 @@ import chainer.links as L
 DNN
 '''
 class DNN(chainer.Chain):
-    def __init__(self, h_dim):
+    def __init__(self, h_dim=2048):
         super(DNN, self).__init__()
         with self.init_scope():
             self.l1 = L.Linear(None, h_dim)

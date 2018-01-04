@@ -54,7 +54,6 @@ def feat_padding(feat, width=400):
 
     return tmp_feat
 
-
 def load_all_feature(mode='train', feat_type='db4'):
     flist = []  # wav file list
     label = []  # wav label list
@@ -94,22 +93,24 @@ class DataSet():
         return len(self.data)
 
     def __getitem__(self, idx):
-        '''
-        **NOT IMPLEMENT FOR SLICE**
-        '''
+
         if type(idx) is not slice:
             return (self.data[idx], self.label[idx])
         
         # slice reading
         items = []
+        length = self.__len__()
         for i in range(idx.start, idx.stop):
+            # if i >= self.__len__():
+            #     print('FUCKING INDEX OUT OF RANGE: {} {}'.format(idx.start, idx.stop))
+            #     break
+            i %= length
             items.append((self.data[i], self.label[i]))
         return items
-
+        
 class DataSetOnLine():
     '''
     Online data loader
-    **NOT FINISHED**
     '''
     def __init__(self, mode='train', feat_type='db4', buf=True):
         '''
@@ -161,18 +162,23 @@ class DataSetOnLine():
 
         # slice reading
         items = []
+        length = self.__len__()
         for i in range(idx.start, idx.stop):
+            i %= length
+            
+            if self.buf and self.buffer[i] is not None:
+                items.append(self.buffer[i])
+                continue
             wav_path = os.path.join(WAV[self.mode], self.flist[i])
-            feat = extract(wav_path, self.feat_type);
-
+            feat = extract(wav_path, self.feat_type)
             feat = feat_padding(feat)
-
             items.append((feat, [self.label[i]] * feat.shape[0], self.flist[i]))
+            if self.buf:
+                self.buffer[i] = items[-1]
+
         return items
 
 if __name__ == '__main__':
     train = DataSetOnLine('train', 'fft', False)
     print(train[3])
     # load_all_feature('train', 'fft')
-    # train = load_data('train')
-    # test = load_data('dev')
