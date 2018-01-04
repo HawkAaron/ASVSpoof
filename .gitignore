@@ -1,0 +1,5 @@
+__pycache__/
+models/__pycache__/
+dnn
+*.db4
+upload.sh
