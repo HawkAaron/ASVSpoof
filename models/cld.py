@@ -30,7 +30,7 @@ class DNN_BLOCK(chainer.Chain):
 class CLD(chainer.Chain):
 
     def __init__(self, n_units=512, n_out=2):
-        super(MLP, self).__init__()
+        super(CLD, self).__init__()
         with self.init_scope():
             self.conv1 = CONV_BLOCK(4, 3)
             self.conv2 = CONV_BLOCK(4, 3)

@@ -81,8 +81,8 @@ def main():
     # Set up a neural network to train
     try:
         model = L.Classifier(getattr(models, args.model)())
-    except:
-        print('{} not found!'.format(args.model))
+    except Exception as e:
+        print(e)
         return 
     
     if args.gpu >= 0:
