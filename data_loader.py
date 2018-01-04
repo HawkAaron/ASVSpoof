@@ -153,7 +153,10 @@ class DataSetOnLine():
             wav_path = os.path.join(WAV[self.mode], self.flist[idx])
             feat = extract(wav_path, self.feat_type)   # wav corrupt not hundle
 
-            feat = feat_padding(feat)
+            if self.feat_type == 'fft':
+                feat = feat_padding(feat)
+            else:
+                feat = feat_window(feat)
 
             item = (feat, [self.label[idx]] * feat.shape[0], self.flist[idx])
             if self.buf:
@@ -171,7 +174,12 @@ class DataSetOnLine():
                 continue
             wav_path = os.path.join(WAV[self.mode], self.flist[i])
             feat = extract(wav_path, self.feat_type)
-            feat = feat_padding(feat)
+
+            if self.feat_type == 'fft':
+                feat = feat_padding(feat)
+            else:
+                feat = feat_window(feat)
+                
             items.append((feat, [self.label[i]] * feat.shape[0], self.flist[i]))
             if self.buf:
                 self.buffer[i] = items[-1]
