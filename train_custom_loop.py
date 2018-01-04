@@ -19,11 +19,9 @@ import chainer.functions as F
 from chainer import serializers
 from chainer import training
 from chainer.training import extensions
-# from cqcc import load_cqcc
 import numpy as np
 from data_loader import DataSet, load_data, DataSetOnLine
-from model import *
-from lcnn import LightCNN_29Layers
+from models import *
 
 def main():
     parser = argparse.ArgumentParser(description='Chainer example: MNIST')
@@ -57,7 +55,7 @@ def main():
     print('')
 
     # Set up a neural network to train
-    model = L.Classifier(MLP())
+    model = L.Classifier(DNN())
     if args.gpu >= 0:
         # Make a speciied GPU current
         chainer.cuda.get_device_from_id(args.gpu).use()
