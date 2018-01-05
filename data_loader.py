@@ -33,27 +33,6 @@ def load_data(mode='train', feat_type='db4', update=False, fresh=False):
         pickle.dump(data, f)
     return data
 
-def feat_window(feat):
-    window = 6  # actual size = 2 * window - 1
-    feat = np.pad(feat, [[0, 0], [window - 1, window - 1]], mode='edge')
-    tmp_feat = []
-    for i in range(window - 1, feat.shape[1] - window, 2*window-1):
-        fram_win = feat[:, i-window+1: i+window].reshape(-1) # store feat_dim * 11 map as vector
-        tmp_feat.append(fram_win)
-    return np.array(tmp_feat, dtype=np.float32)
-
-def feat_padding(feat, width=400):
-    dim = feat.shape[0]
-
-    padding = width - feat.shape[1] % width
-    if padding < 200:
-        feat = np.pad(feat, [[0, 0], [0, padding]], mode='edge')
-    if feat.shape[1] % width:
-        feat = feat[:, :-(feat.shape[1]%width)]
-    tmp_feat = feat.T.reshape(-1, width, dim)
-
-    return tmp_feat
-
 def load_all_feature(mode='train', feat_type='db4'):
     flist = []  # wav file list
     label = []  # wav label list
@@ -73,11 +52,6 @@ def load_all_feature(mode='train', feat_type='db4'):
         except:
             print('CORRUPTED WAV: ', wav_path)
             continue
-
-        if feat_type == 'fft':
-            feat = feat_padding(feat)
-        if feat_type == 'db4':
-            feat = feat_window(feat)
 
         final_feat.append(feat)
         final_flist.append(flist[idx])
@@ -101,9 +75,6 @@ class DataSet():
         items = []
         length = self.__len__()
         for i in range(idx.start, idx.stop):
-            # if i >= self.__len__():
-            #     print('FUCKING INDEX OUT OF RANGE: {} {}'.format(idx.start, idx.stop))
-            #     break
             i %= length
             items.append((self.data[i], self.label[i]))
         return items
@@ -112,7 +83,7 @@ class DataSetOnLine():
     '''
     Online data loader
     '''
-    def __init__(self, mode='train', feat_type='db4', buf=True):
+    def __init__(self, mode='train', feat_type='db4', buf=False):
         '''
         mode should be `train`, `dev`, or `eval`
         '''
@@ -153,11 +124,6 @@ class DataSetOnLine():
             wav_path = os.path.join(WAV[self.mode], self.flist[idx])
             feat = extract(wav_path, self.feat_type)   # wav corrupt not hundle
 
-            if self.feat_type == 'fft':
-                feat = feat_padding(feat)
-            else:
-                feat = feat_window(feat)
-
             item = (feat, [self.label[idx]] * feat.shape[0], self.flist[idx])
             if self.buf:
                 self.buffer[idx] = item
@@ -175,18 +141,12 @@ class DataSetOnLine():
             wav_path = os.path.join(WAV[self.mode], self.flist[i])
             feat = extract(wav_path, self.feat_type)
 
-            if self.feat_type == 'fft':
-                feat = feat_padding(feat)
-            else:
-                feat = feat_window(feat)
-
             items.append((feat, [self.label[i]] * feat.shape[0], self.flist[i]))
             if self.buf:
                 self.buffer[i] = items[-1]
-
         return items
 
 if __name__ == '__main__':
-    train = DataSetOnLine('train', 'fft', False)
+    train = DataSetOnLine('train', 'cqcc')
     print(train[3])
     # load_all_feature('train', 'fft')
