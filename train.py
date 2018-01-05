@@ -68,7 +68,7 @@ def main():
     parser.add_argument('--resume', '-r', default='', help='Resume the training from snapshot')
     parser.add_argument('--unit', '-u', type=int, default=1024, help='Number of units')
 
-    parser.add_argument('--online', default=True, action='store_false', help='Load feature online when training')
+    parser.add_argument('--online', default=False, action='store_true', help='Load feature online when training')
     parser.add_argument('--model', '-m', default='DNN', help='Nnet model structure')
     parser.add_argument('--feat', '-f', default='fft', help='feature type')
     parser.add_argument('--fresh', default=False, action='store_true', help='extract feature from wav file directly')
