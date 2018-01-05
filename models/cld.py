@@ -29,11 +29,11 @@ class DNN_BLOCK(chainer.Chain):
 # Network definition
 class CLD(chainer.Chain):
 
-    def __init__(self, n_units=512, n_out=2):
+    def __init__(self, n_units=1024, n_out=2):
         super(CLD, self).__init__()
         with self.init_scope():
-            self.conv1 = CONV_BLOCK(4, 3)
-            self.conv2 = CONV_BLOCK(4, 3)
+            self.conv1 = CONV_BLOCK(16, 3)
+            self.conv2 = CONV_BLOCK(16, 3)
             self.dnn1 = DNN_BLOCK(n_units)
             self.dnn2 = DNN_BLOCK(n_units)
             self.dnn3 = DNN_BLOCK(n_units)

@@ -84,7 +84,7 @@ def main():
     except Exception as e:
         print(e)
         return 
-    
+
     if args.gpu >= 0:
         # Make a speciied GPU current
         chainer.cuda.get_device_from_id(args.gpu).use()
@@ -138,7 +138,7 @@ def main():
 
     # Run the training
     trainer.run()
-    
+
     # Serialize the final model
     chainer.serializers.save_npz(os.path.join(args.out, 'model_final'), model)
 

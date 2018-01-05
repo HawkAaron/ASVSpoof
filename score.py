@@ -4,7 +4,7 @@ from models.common import *
 from data_loader import DataSet, load_data, DataSetOnLine
 
 parser = argparse.ArgumentParser(description='ASVSpoof')
-parser.add_argument('--batchsize', '-b', type=int, default=1, help='Number of images in each mini-batch')
+parser.add_argument('--batchsize', '-b', type=int, default=500, help='Number of images in each mini-batch')
 parser.add_argument('--gpu', '-g', type=int, default=0, help='GPU ID (negative value indicates CPU)')
 parser.add_argument('--dir', '-d', default='dnn', help='directory where model is, and save score')
 parser.add_argument('--name', '-n', default='model_final', help='model name')
@@ -30,8 +30,8 @@ if args.gpu >= 0:
 dev = DataSetOnLine(mode='dev', feat_type=args.feat, buf=False)
 test = DataSetOnLine(mode='eval', feat_type=args.feat, buf=False)
 
-dev_iter = chainer.iterators.MultiprocessIterator(dev, args.batchsize, n_prefetch=2, shared_mem=20*1024*1024, repeat=False, shuffle=False)
-test_iter = chainer.iterators.MultiprocessIterator(test, args.batchsize, n_prefetch=2, shared_mem=20*1024*1024, repeat=False, shuffle=False)
+dev_iter = chainer.iterators.MultiprocessIterator(dev, args.batchsize, n_prefetch=1, shared_mem=2*1024*1024, repeat=False, shuffle=False)
+test_iter = chainer.iterators.MultiprocessIterator(test, args.batchsize, n_prefetch=1, shared_mem=2*1024*1024, repeat=False, shuffle=False)
 
 def convert_batch(batch, device=None):
     batch = np.array(batch)
