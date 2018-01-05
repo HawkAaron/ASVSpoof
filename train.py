@@ -19,7 +19,10 @@ def convert_batch(batch, device=None):
         y = cuda.to_gpu(y, device)
         return (x, y)
 
-def cnn_iter(batchsize, feat):
+def online_iter(batchsize, feat):
+    '''
+    load feature if wanted
+    '''
     train = DataSetOnLine(mode='train', feat_type=feat, buf=False)
     dev = DataSetOnLine(mode='dev', feat_type=feat, buf=False)
 
@@ -28,7 +31,10 @@ def cnn_iter(batchsize, feat):
 
     return train_iter, dev_iter
 
-def dnn_iter(batchsize, feat, fresh=False):
+def mem_iter(batchsize, feat, fresh=False):
+    '''
+    memory iter, load all featrue to memory before training
+    '''
     # extract all feature
     train_data, train_label, _ = load_data(mode='train', feat_type=feat, fresh=fresh)
     train_data = np.vstack(train_data)
@@ -61,9 +67,8 @@ def main():
     parser.add_argument('--out', '-o', default='dnn', help='Directory to output the result')
     parser.add_argument('--resume', '-r', default='', help='Resume the training from snapshot')
     parser.add_argument('--unit', '-u', type=int, default=1024, help='Number of units')
-    parser.add_argument('--noplot', dest='plot', action='store_false', help='Disable PlotReport extension')
 
-    parser.add_argument('--net', '-n', default='dnn', help='Nnet type for choosing iterators')
+    parser.add_argument('--online', default=True, action='store_false', help='Load feature online when training')
     parser.add_argument('--model', '-m', default='DNN', help='Nnet model structure')
     parser.add_argument('--feat', '-f', default='fft', help='feature type')
     parser.add_argument('--fresh', default=False, action='store_true', help='extract feature from wav file directly')
@@ -97,10 +102,10 @@ def main():
     optimizer.setup(model)
     optimizer.add_hook(chainer.optimizer.WeightDecay(5e-4))
 
-    if args.net == 'cnn':
-        train_iter, dev_iter = cnn_iter(args.batchsize, args.feat)
+    if args.online:
+        train_iter, dev_iter = online_iter(args.batchsize, args.feat)
     else:
-        train_iter, dev_iter = dnn_iter(args.batchsize, args.feat, args.fresh)
+        train_iter, dev_iter = mem_iter(args.batchsize, args.feat, args.fresh)
 
     # Set up a trainer
     updater = training.StandardUpdater(train_iter, optimizer, converter=convert_batch, device=args.gpu)
