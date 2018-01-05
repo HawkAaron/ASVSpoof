@@ -19,23 +19,23 @@ def convert_batch(batch, device=None):
         y = cuda.to_gpu(y, device)
         return (x, y)
 
-def cnn_iter(batchsize):
-    train = DataSetOnLine(mode='train', feat_type='fft', buf=False)
-    dev = DataSetOnLine(mode='dev', feat_type='fft', buf=False)
+def cnn_iter(batchsize, feat):
+    train = DataSetOnLine(mode='train', feat_type=feat, buf=False)
+    dev = DataSetOnLine(mode='dev', feat_type=feat, buf=False)
 
     train_iter = chainer.iterators.MultiprocessIterator(train, batchsize, n_prefetch=2, shared_mem=100*1024*1024)
     dev_iter = chainer.iterators.MultiprocessIterator(dev, batchsize, n_prefetch=2, shared_mem=100*1024*1024, repeat=False, shuffle=False)
 
     return train_iter, dev_iter
 
-def dnn_iter(batchsize):
+def dnn_iter(batchsize, feat, fresh=False):
     # extract all feature
-    train_data, train_label, _ = load_data()
+    train_data, train_label, _ = load_data(mode='train', feat_type=feat, fresh=fresh)
     train_data = np.vstack(train_data)
     # mean = np.mean(train_data, axis=0)
     # std = np.std(train_data, axis=0)
     # train_data = (train_data - mean) / std
-    dev_data, dev_label, _ = load_data(mode='dev')
+    dev_data, dev_label, _ = load_data(mode='dev', feat_type=feat, fresh=fresh)
     dev_data = np.vstack(dev_data)
     # mean = np.mean(dev_data, axis=0)
     # std = np.std(dev_data, axis=0)
@@ -65,6 +65,8 @@ def main():
 
     parser.add_argument('--net', '-n', default='dnn', help='Nnet type for choosing iterators')
     parser.add_argument('--model', '-m', default='DNN', help='Nnet model structure')
+    parser.add_argument('--feat', '-f', default='fft', help='feature type')
+    parser.add_argument('--fresh', default=False, action='store_true', help='extract feature from wav file directly')
     args = parser.parse_args()
 
     try:
@@ -96,9 +98,9 @@ def main():
     optimizer.add_hook(chainer.optimizer.WeightDecay(5e-4))
 
     if args.net == 'cnn':
-        train_iter, dev_iter = cnn_iter(args.batchsize)
+        train_iter, dev_iter = cnn_iter(args.batchsize, args.feat)
     else:
-        train_iter, dev_iter = dnn_iter(args.batchsize)
+        train_iter, dev_iter = dnn_iter(args.batchsize, args.feat, args.fresh)
 
     # Set up a trainer
     updater = training.StandardUpdater(train_iter, optimizer, converter=convert_batch, device=args.gpu)

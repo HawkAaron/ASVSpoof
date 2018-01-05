@@ -30,8 +30,8 @@ if args.gpu >= 0:
 dev = DataSetOnLine(mode='dev', feat_type=args.feat, buf=False)
 test = DataSetOnLine(mode='eval', feat_type=args.feat, buf=False)
 
-dev_iter = chainer.iterators.MultiprocessIterator(dev, args.batchsize, n_prefetch=1, shared_mem=2*1024*1024, repeat=False, shuffle=False)
-test_iter = chainer.iterators.MultiprocessIterator(test, args.batchsize, n_prefetch=1, shared_mem=2*1024*1024, repeat=False, shuffle=False)
+dev_iter = chainer.iterators.MultiprocessIterator(dev, args.batchsize, n_prefetch=2, shared_mem=4*1024*1024, repeat=False, shuffle=False)
+test_iter = chainer.iterators.MultiprocessIterator(test, args.batchsize, n_prefetch=2, shared_mem=4*1024*1024, repeat=False, shuffle=False)
 
 def convert_batch(batch, device=None):
     batch = np.array(batch)
@@ -73,5 +73,7 @@ def predict(data_iter, save_path):
 
 print('dev score')
 predict(dev_iter, 'score_dev')
+print('saved to score_dev')
 print('eval score')
 predict(test_iter, 'score_test')
+print('saved to score_test')

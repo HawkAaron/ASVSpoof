@@ -76,7 +76,7 @@ def load_all_feature(mode='train', feat_type='db4'):
 
         if feat_type == 'fft':
             feat = feat_padding(feat)
-        else:
+        if feat_type == 'db4':
             feat = feat_window(feat)
 
         final_feat.append(feat)
@@ -179,7 +179,7 @@ class DataSetOnLine():
                 feat = feat_padding(feat)
             else:
                 feat = feat_window(feat)
-                
+
             items.append((feat, [self.label[i]] * feat.shape[0], self.flist[i]))
             if self.buf:
                 self.buffer[i] = items[-1]
