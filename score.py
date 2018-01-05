@@ -4,7 +4,7 @@ from models.common import *
 from data_loader import DataSet, load_data, DataSetOnLine
 
 parser = argparse.ArgumentParser(description='ASVSpoof')
-parser.add_argument('--batchsize', '-b', type=int, default=500, help='Number of images in each mini-batch')
+parser.add_argument('--batchsize', '-b', type=int, default=1, help='Number of images in each mini-batch')
 parser.add_argument('--gpu', '-g', type=int, default=0, help='GPU ID (negative value indicates CPU)')
 parser.add_argument('--dir', '-d', default='dnn', help='directory where model is, and save score')
 parser.add_argument('--name', '-n', default='model_final', help='model name')
@@ -30,21 +30,22 @@ if args.gpu >= 0:
 dev = DataSetOnLine(mode='dev', feat_type=args.feat, buf=False)
 test = DataSetOnLine(mode='eval', feat_type=args.feat, buf=False)
 
-dev_iter = chainer.iterators.MultiprocessIterator(dev, 1, n_prefetch=2, shared_mem=20*1024*1024, repeat=False, shuffle=False)
-test_iter = chainer.iterators.MultiprocessIterator(test, 1, n_prefetch=2, shared_mem=20*1024*1024, repeat=False, shuffle=False)
+dev_iter = chainer.iterators.MultiprocessIterator(dev, args.batchsize, n_prefetch=2, shared_mem=20*1024*1024, repeat=False, shuffle=False)
+test_iter = chainer.iterators.MultiprocessIterator(test, args.batchsize, n_prefetch=2, shared_mem=20*1024*1024, repeat=False, shuffle=False)
 
 def convert_batch(batch, device=None):
     batch = np.array(batch)
+    length_list = [len(mini[1]) for mini in batch]
     x = np.vstack(batch[:,0])
     # y = np.hstack(batch[:,1])
-    t = np.hstack(batch[:,2])
+    t = np.hstack(batch[:,2]).tolist()
 
     if device is None:
-        return (x, t)
+        return (x, t, length_list)
     if device >= 0:
         x = cuda.to_gpu(x, device)
         # y = cuda.to_gpu(y, device)
-        return (x, t)
+        return (x, t, length_list)
 
 def score_to_file(score, flist, fname):
     '''
@@ -58,12 +59,15 @@ def predict(data_iter, save_path):
     score = []
     flist = []
     for batch in data_iter:
-        x, t = convert_batch(batch, args.gpu)
+        x, t, length_list = convert_batch(batch, args.gpu)
         y = model(x)
-        m = np.mean(y.data, axis=0)
-        score.append(m[0] - m[1])
-        flist.append(t[0])
-        print(flist[-1], score[-1])
+        cur = 0
+        for l, name in zip(length_list, t):
+            m = np.mean(y.data[cur:cur+l], axis=0)
+            score.append(m[0] - m[1])
+            flist.append(name)
+            cur += l
+            print(flist[-1], score[-1])
 
     score_to_file(score, flist, save_path)
 
