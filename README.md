@@ -8,6 +8,10 @@
 * librosa 0.5.1
 * pywt 0.5.2
 
+## TODO
+* Common feature loader interface
+* LSTM structure
+
 ## Notice
 1. Change `root` in `config` to your local data path.
 2. Add models in `model.py`
