@@ -16,13 +16,13 @@ class CONV_BLOCK(chainer.Chain):
 # Network definition
 class CNN(chainer.Chain):
 
-    def __init__(self, n_units=128, n_out=2):
+    def __init__(self, n_units=32, n_out=2):
         super(CNN, self).__init__()
         with self.init_scope():
-            self.conv1 = CONV_BLOCK(64, 3)
-            self.conv2 = CONV_BLOCK(64, 3)
-            self.conv3 = CONV_BLOCK(128, 3)
-            self.conv4 = CONV_BLOCK(128, 3)
+            self.conv1 = CONV_BLOCK(n_units, 3)
+            self.conv2 = CONV_BLOCK(n_units, 3)
+            self.conv3 = CONV_BLOCK(n_units, 3)
+            self.conv4 = CONV_BLOCK(n_units, 3)
             self.conv5 = CONV_BLOCK(n_units, 3)
             self.conv6 = CONV_BLOCK(n_units, 3)
             self.conv7 = CONV_BLOCK(n_units, 3)
