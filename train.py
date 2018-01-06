@@ -26,8 +26,8 @@ def online_iter(batchsize, feat):
     train = DataSetOnLine(mode='train', feat_type=feat)
     dev = DataSetOnLine(mode='dev', feat_type=feat)
 
-    train_iter = chainer.iterators.MultiprocessIterator(train, batchsize, n_prefetch=2, shared_mem=4*1024*1024)
-    dev_iter = chainer.iterators.MultiprocessIterator(dev, batchsize, n_prefetch=2, shared_mem=4*1024*1024, repeat=False, shuffle=False)
+    train_iter = chainer.iterators.MultiprocessIterator(train, batchsize, n_prefetch=2, shared_mem=10*1024*1024)
+    dev_iter = chainer.iterators.MultiprocessIterator(dev, batchsize, n_prefetch=2, shared_mem=10*1024*1024, repeat=False, shuffle=False)
 
     return train_iter, dev_iter
 

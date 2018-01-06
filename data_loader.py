@@ -147,6 +147,7 @@ class DataSetOnLine():
         return items
 
 if __name__ == '__main__':
-    train = DataSetOnLine('train', 'cqcc')
-    print(train[3])
+    load_all_feature('train', 'cqcc')
+    # train = DataSetOnLine('train', 'cqcc')
+    # print(train[3])
     # load_all_feature('train', 'fft')
