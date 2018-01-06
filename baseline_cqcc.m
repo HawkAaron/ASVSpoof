@@ -21,7 +21,7 @@ addpath(genpath('bosaris_toolkit'));
 pathToDatabase = '/mnt/speechlab/users/hedi7/data/ASVspoof2017/'
 trainProtocolFile = fullfile(pathToDatabase, 'protocol', 'ASVspoof2017_train.trn.txt');
 devProtocolFile = fullfile(pathToDatabase, 'protocol', 'ASVspoof2017_dev.trl.txt');
-evaProtocolFile = fullfile(pathToDatabase, 'protocol', 'ASVspoof2017_eval_v2_key.trl.txt');
+evalProtocolFile = fullfile(pathToDatabase, 'protocol', 'ASVspoof2017_eval_v2_key.trl.txt');
 
 
 % read train protocol
@@ -79,46 +79,68 @@ disp('Training GMM for SPOOF...');
 [spoofGMM.m, spoofGMM.s, spoofGMM.w] = vl_gmm([spoofFeatureCell{:}], 512, 'verbose', 'MaxNumIterations',100);
 disp('Done!');
 
-%% Scoring
-
-% score for dev data
-score(devProtocolFile)
-
-% score for eval data
-score(evaProtocolFile)
-
-
 %% Feature extraction and scoring of development data
 
-function score(protocalFile)
-    % read development protocol
-    fileID = fopen(protocalFile);
-    protocol = textscan(fileID, '%s%s%s%s%s%s%s');
-    fclose(fileID);
+% read development protocol
+fileID = fopen(devProtocolFile);
+protocol = textscan(fileID, '%s%s%s%s%s%s%s');
+fclose(fileID);
 
-    % get file and label lists
-    filelist = protocol{1};
-    labels = protocol{2};
+% get file and label lists
+filelist = protocol{1};
+labels = protocol{2};
 
-    % process each development trial: feature extraction and scoring
-    scores = zeros(size(filelist));
-    disp('Computing scores for development trials...');
-    parfor i=1:length(filelist)
-        filePath = fullfile(pathToDatabase,'ASVspoof2017_dev',filelist{i});
-        [x,fs] = audioread(filePath);
-        % featrue extraction
-        x_cqcc = cqcc(x, fs, B, fmax, fmin, d, cf, 'ZsdD');
+% process each development trial: feature extraction and scoring
+scores = zeros(size(filelist));
+disp('Computing scores for development trials...');
+parfor i=1:length(filelist)
+    filePath = fullfile(pathToDatabase,'ASVspoof2017_dev',filelist{i});
+    [x,fs] = audioread(filePath);
+    % featrue extraction
+    x_cqcc = cqcc(x, fs, B, fmax, fmin, d, cf, 'ZsdD');
 
-        %score computation
-        llk_genuine = mean(compute_llk(x_cqcc,genuineGMM.m,genuineGMM.s,genuineGMM.w));
-        llk_spoof = mean(compute_llk(x_cqcc,spoofGMM.m,spoofGMM.s,spoofGMM.w));
-        % compute log-likelihood ratio
-        scores(i) = llk_genuine - llk_spoof;
-    end
-    disp('Done!');
-
-    % compute performance
-    [Pmiss,Pfa] = rocch(scores(strcmp(labels,'genuine')),scores(strcmp(labels,'spoof')));
-    EER = rocch2eer(Pmiss,Pfa) * 100; 
-    fprintf('EER is %.2f\n', EER);
+    %score computation
+    llk_genuine = mean(compute_llk(x_cqcc,genuineGMM.m,genuineGMM.s,genuineGMM.w));
+    llk_spoof = mean(compute_llk(x_cqcc,spoofGMM.m,spoofGMM.s,spoofGMM.w));
+    % compute log-likelihood ratio
+    scores(i) = llk_genuine - llk_spoof;
 end
+disp('Done!');
+
+% compute development performance
+[Pmiss,Pfa] = rocch(scores(strcmp(labels,'genuine')),scores(strcmp(labels,'spoof')));
+EER = rocch2eer(Pmiss,Pfa) * 100; 
+fprintf('EER is %.2f\n', EER);
+
+%% Feature extraction and scoring of evaluation data
+
+% read evaluation protocol
+fileID = fopen(evalProtocolFile);
+protocol = textscan(fileID, '%s%s%s%s%s%s%s');
+fclose(fileID);
+
+% get file and label lists
+filelist = protocol{1};
+labels = protocol{2};
+
+% process each evaluation trial: feature extraction and scoring
+scores = zeros(size(filelist));
+disp('Computing scores for evaluation trials...');
+parfor i=1:length(filelist)
+    filePath = fullfile(pathToDatabase,'ASVspoof2017_eval',filelist{i});
+    [x,fs] = audioread(filePath);
+    % featrue extraction
+    x_cqcc = cqcc(x, fs, B, fmax, fmin, d, cf, 'ZsdD');
+
+    %score computation
+    llk_genuine = mean(compute_llk(x_cqcc,genuineGMM.m,genuineGMM.s,genuineGMM.w));
+    llk_spoof = mean(compute_llk(x_cqcc,spoofGMM.m,spoofGMM.s,spoofGMM.w));
+    % compute log-likelihood ratio
+    scores(i) = llk_genuine - llk_spoof;
+end
+disp('Done!');
+
+% compute evaluation performance
+[Pmiss,Pfa] = rocch(scores(strcmp(labels,'genuine')),scores(strcmp(labels,'spoof')));
+EER = rocch2eer(Pmiss,Pfa) * 100; 
+fprintf('EER is %.2f\n', EER);
